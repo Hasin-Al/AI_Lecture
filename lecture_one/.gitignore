@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Local run artifacts
+.superpowers/
+.coverage
+htmlcov/

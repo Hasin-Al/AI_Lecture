@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f7fb" />
+    <title>Week 1 AI API Lab</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <p class="eyebrow">API-FIRST PYTHON · WEEK 1</p>
+      <h1>Ask the model</h1>
+      <p class="lede">Your browser sends this message to our FastAPI backend. The backend keeps the provider key private.</p>
+    </header>
+
+    <main class="page-content">
+      <section class="panel" aria-labelledby="chat-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">LIVE REQUEST</p>
+            <h2 id="chat-heading">Try a question</h2>
+          </div>
+          <span class="method-badge">POST /chat</span>
+        </div>
+
+        <form id="chat-form">
+          <label for="message">Your message</label>
+          <textarea
+            id="message"
+            name="message"
+            rows="5"
+            minlength="1"
+            maxlength="4000"
+            placeholder="For example: Explain an API in two sentences."
+            required
+          ></textarea>
+          <p class="field-hint">Keep it under 4,000 characters. The server checks this too.</p>
+
+          <div class="form-footer">
+            <div class="temperature-control">
+              <label for="temperature">Temperature</label>
+              <input id="temperature" name="temperature" type="number" value="0.7" min="0" max="2" step="0.1" />
+            </div>
+            <button id="submit-button" type="submit">
+              <span id="button-label">Send message</span>
+              <span id="spinner" class="spinner" aria-hidden="true" hidden></span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel response-panel" aria-labelledby="response-heading">
+        <div class="panel-heading">
+          <div>
+            <p class="step-label">SERVER RESPONSE</p>
+            <h2 id="response-heading">Answer</h2>
+          </div>
+          <span id="request-id" class="request-id" hidden></span>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite">Ready when you are.</p>
+        <pre id="answer" class="answer">The answer will appear here.</pre>
+      </section>
+
+      <aside class="devtools-note">
+        <span class="note-icon" aria-hidden="true">↗</span>
+        <p><strong>Instructor tip</strong> Open DevTools → Network, submit a question, and inspect the request body. The provider key should never appear in the browser.</p>
+      </aside>
+    </main>
+  </body>
+</html>
