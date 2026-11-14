@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prompt lab · Week 2</title>
+  <link rel="stylesheet" href="/static/lab.css">
+  <script src="/static/lab.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Prompt lab home"><span class="brand-mark">{ }</span> AI COURSE <span class="divider">/</span> WEEK 02</a>
+    <a href="/docs" target="_blank" rel="noopener">Explore the API ↗</a>
+  </header>
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">STRUCTURED EXTRACTION · HANDS-ON LAB</p><h1>Change the prompt.<br><em>Compare the results.</em></h1></div>
+      <p class="intro-note">One input. One model. Two prompts.<br>See what changes—and measure whether<br>the answer actually gets better.</p>
+    </div>
+    <nav class="view-switch" aria-label="Lab sections">
+      <button id="live-tab" aria-pressed="true">01 <span>Live prompt comparison</span></button>
+      <button id="offline-tab" aria-pressed="false">02 <span>Offline failure scenarios</span></button>
+    </nav>
+    <p id="status" class="status" role="status" aria-live="polite">Loading the scenario library…</p>
+    <section id="live-view" aria-label="Live comparison">
+      <div class="settings-bar">
+        <p><span class="live-dot"></span> GROQ MODEL <strong id="model-name">Loading…</strong></p>
+        <div class="settings-controls">
+          <label for="mode">Output mode</label>
+          <select id="mode" data-lock><option value="prompt">Prompt-only</option><option value="structured">Strict JSON Schema</option></select>
+          <label class="checkbox"><input id="repair" type="checkbox" data-lock> Allow one repair</label>
+        </div>
+      </div>
+
+      <section class="panel experiment-panel" aria-label="Guided rule experiments">
+        <div class="experiment-heading">
+          <label for="experiment"><strong>Show what a rule changes</strong></label>
+          <select id="experiment" data-lock><option value="lecture">Original lecture v1 vs v2</option></select>
+        </div>
+        <p id="experiment-question" class="hint">Choose a guided experiment to compare the same base prompt without and with one explicit rule.</p>
+        <p class="hint">Predict first, then run it. A rule can help, make no difference, or make the answer worse. We show the actual result.</p>
+      </section>
+
+      <div class="setup-grid">
+        <section class="panel source-panel">
+          <div class="panel-heading"><h2><span class="step">1</span> Choose the input</h2><span class="small-tag">UNTRUSTED DATA</span></div>
+          <label for="scenario">Scenario</label>
+          <select id="scenario" data-lock></select>
+          <label for="source">Source text <span class="quiet" id="char-count">0 / 8,000</span></label>
+          <textarea id="source" rows="6" maxlength="8000" data-lock placeholder="Paste an email or contact message…"></textarea>
+          <details class="expected-details" open>
+            <summary>Expected answer <span class="quiet">for accuracy scoring</span></summary>
+            <label for="expected" class="sr-only">Expected contact JSON; leave empty for unscored custom text</label>
+            <textarea id="expected" class="code-input" rows="5" data-lock spellcheck="false"></textarea>
+            <p class="hint">Editing the source clears its expected answer. Add your own expected JSON to score it, or leave this blank.</p>
+          </details>
+        </section>
+
+        <section class="panel prompt-panel">
+          <div class="panel-heading"><h2><span class="step">2</span> Change the instructions</h2><button id="reset-prompts" class="text-button" data-lock>Reset to lecture prompts</button></div>
+          <p class="hint">These are the complete system messages sent to Groq. The source stays in a separate user message.</p>
+          <div class="prompt-grid">
+            <div class="prompt-editor baseline">
+              <label for="prompt-a"><span class="letter">A</span> <span id="label-a">Baseline</span> <span id="version-a" class="version">starts at v1</span></label>
+              <textarea id="prompt-a" rows="13" maxlength="8000" data-lock spellcheck="false"></textarea>
+            </div>
+            <div class="prompt-editor improved">
+              <label for="prompt-b"><span class="letter">B</span> <span id="label-b">Revised</span> <span id="version-b" class="version">starts at v2</span></label>
+              <textarea id="prompt-b" rows="13" maxlength="8000" data-lock spellcheck="false"></textarea>
+            </div>
+          </div>
+          <details class="expected-details" open><summary>Instruction changes from A to B</summary><pre id="prompt-diff" class="prompt-diff"></pre></details>
+          <p class="teaching-note"><strong>Try this:</strong> start with S7 (prompt injection), then E16 (contact requested second). Read the added ambiguity rules in B.</p>
+          <details class="expected-details"><summary>What the lecture’s v2 prompt adds</summary><pre id="lecture-rules"></pre></details>
+        </section>
+      </div>
+
+      <div class="action-bar">
+        <button id="compare" class="primary" data-lock disabled>Compare this input <span aria-hidden="true">→</span></button>
+        <div class="batch-actions">
+          <label class="sr-only" for="case-set">Scenario set for batch comparison</label>
+          <select id="case-set" data-lock><option value="full">All 20 live scenarios</option><option value="lab">Lecture S1–S9</option></select>
+          <button id="run-all" class="secondary" data-lock disabled>Run the comparison set</button>
+        </div>
+        <button id="stop" class="stop-button" hidden>Stop after this case</button>
+      </div>
+      <p class="hint call-note">Each input makes two live generation requests, plus any retries or repairs. Both prompts use the same selected model, schema, and temperature (0).</p>
+      <div id="progress-wrap" hidden><progress id="progress" max="20" value="0"></progress><p id="progress-label"></p></div>
+
+      <section id="comparison-results" class="results-section" hidden aria-label="Output comparison">
+        <div class="section-heading"><h2 id="result-heading">The results</h2><button id="download-single" class="text-button">Download this comparison ↓</button></div>
+        <p id="result-context" class="hint"></p>
+        <div class="result-grid"><article id="result-a" class="panel result-card baseline"></article><article id="result-b" class="panel result-card improved"></article></div>
+        <p id="result-difference" class="conclusion" role="status"></p>
+        <p class="teaching-note"><strong>Read the checks separately.</strong> Valid JSON checks syntax. Schema checks structure. Evidence checks source presence. Only the expected-answer match measures the chosen contact.</p>
+      </section>
+
+      <section id="batch-results" class="results-section" hidden aria-label="All scenario results">
+        <div class="section-heading"><h2>Did the prompt improve?</h2><button id="download-batch" class="text-button" disabled>Download run JSON ↓</button></div>
+        <p id="batch-context" class="hint"></p>
+        <div id="scoreboard" class="scoreboard"></div>
+        <p id="batch-conclusion" class="conclusion"></p>
+        <div class="table-scroll"><table><caption class="sr-only">Per-scenario results for prompt A and prompt B</caption><thead><tr><th>Scenario</th><th>A · match</th><th>B · match</th><th>A / B schema</th><th>A / B time</th><th>Inspect</th></tr></thead><tbody id="batch-body"></tbody></table></div>
+        <p class="hint">Scores include failed cases. “Schema” is first-output validity, before repair. Times include provider retries; speed differences from a single run are not a benchmark.</p>
+      </section>
+    </section>
+
+    <section id="offline-view" hidden aria-label="Offline scenarios">
+      <div class="offline-intro"><div><h2>Make failures happen on purpose.</h2><p>Run S10–S15 with controlled inputs. No API key, network requests, or real waits.</p></div><button id="run-offline" class="primary">Run all six demos →</button></div>
+      <div id="offline-results" class="offline-grid"></div>
+      <p class="teaching-note">These are deterministic simulations using the same Python validators, repair flow, and retry policy as the service. They are separate from live-model accuracy scores.</p>
+    </section>
+
+    <details class="code-map"><summary>Where does the model call happen?</summary>
+      <p><code>app/groq_service.py</code> → <code>GroqExtractionService._chat()</code></p>
+      <pre>response = self.client.chat.completions.create(
+    **params, timeout=min(20, remaining_seconds),
+)</pre>
+      <p>The page calls <code>POST /lab/compare</code> in <code>app/lab.py</code>. It runs A and B through this same SDK call. Prompt defaults live in <code>app/prompts.py</code>; shared grading lives in <code>app/evaluation.py</code>.</p>
+      <p>The API key stays in the backend’s <code>.env</code>. It is never sent to this page or included in the model’s messages.</p>
+    </details>
+    <footer><span>WEEK 02 / PROMPT LAB</span><span>Structure is measurable. Correctness needs evidence.</span></footer>
+  </main>
+</body>
+</html>
